@@ -1,27 +1,31 @@
 Attribute VB_Name = "Module1"
 'Encours
 
-'Déclaration des variables publiques
-Public RSH As Worksheet     'Feuille récap
+'Encours moyens - Calcul des encours moyens des portefeuilles de la CDG
+'Copyright (C) 2012 Yassine Maaroufi - <yassinemaaroufi@gmail.com>
+'DistribuÃ© sous GPLv3 - http://www.gnu.org/copyleft/gpl.html
+
+'Dï¿½claration des variables publiques
+Public RSH As Worksheet     'Feuille rï¿½cap
 Public TASH As Worksheet    'Feuille tableaux analytiques
-Public TPSH As Worksheet    'Feuille tableau analytique prêts
+Public TPSH As Worksheet    'Feuille tableau analytique prï¿½ts
 Public ASH As Worksheet     'Feuille encours moyen actions
 Public TSH As Worksheet     'Feuille encours moyen taux
 Public YSH As Worksheet     'Feuille encours moyen transactions
-Public PSH As Worksheet     'Feuille encours moyen prêts
+Public PSH As Worksheet     'Feuille encours moyen prï¿½ts
 Public SSH As Worksheet     'Feuille soldes
-Public BSH As Worksheet     'Feuille base de données
-Public BPSH As Worksheet    'Feuille base de données prêts
-Public ESH As Worksheet     'Feuille échéancier
+Public BSH As Worksheet     'Feuille base de donnï¿½es
+Public BPSH As Worksheet    'Feuille base de donnï¿½es prï¿½ts
+Public ESH As Worksheet     'Feuille ï¿½chï¿½ancier
 'Public XSH As Worksheet     'Feuille de tests
 'Autre
-Public di As Integer        'Date de première opération
-Public dd As String         'Date de la dernière opération
+Public di As Integer        'Date de premiï¿½re opï¿½ration
+Public dd As String         'Date de la derniï¿½re opï¿½ration
 Public s As New Collection  '
 Public c As New Collection  'Collection de titres pour les tableaux analytiques
 Public arr() As Variant
 
-'Portefeuilles titre -> Numéros de comptes correspondants
+'Portefeuilles titre -> Numï¿½ros de comptes correspondants
 Public Const P_OBLIG_INVEST As String = "411100 411600 412100 412200 412300 412400"
 Public Const P_OBLIG_PLACT As String = "311100 313100 313200 313300 313400"
 Public Const P_ACTION_PART As String = "422100 422200 422300 422500 423100 423200 423500"
@@ -30,16 +34,16 @@ Public Const P_ACTION_TRANS As String = "305200"
 'Public Const P_ACTION_TRANS As Variant = Array("305200")
 
 'Index
-'Feuille 'Données Titres' (BSH)
-Public Const BSHC As String = "AK"  'Dernière colone
-Public Const IBC As Integer = 5     'Numéro de compte
+'Feuille 'Donnï¿½es Titres' (BSH)
+Public Const BSHC As String = "AK"  'Derniï¿½re colone
+Public Const IBC As Integer = 5     'Numï¿½ro de compte
 Public Const IBD As Integer = 11     'Date comptable
 Public Const IBV As Integer = 37     'Valeur comptable
 Public Const IBCC As Integer = 22    'Code du titre
-Public Const IBP As Integer = 20     'Poste (achat, vente, reclassement, augmentation/réduction capital)
-Public Const IBO As Integer = 4      'op_evenement (pour le cas du portefeuille TRANS. Les opérations ne doivent pas être prises en comptes si champ non vide)
-'Feuille 'Données prêts' (BPSH)
-Public Const IPBO As Integer = 1    'Numéro d'opération
+Public Const IBP As Integer = 20     'Poste (achat, vente, reclassement, augmentation/rï¿½duction capital)
+Public Const IBO As Integer = 4      'op_evenement (pour le cas du portefeuille TRANS. Les opï¿½rations ne doivent pas ï¿½tre prises en comptes si champ non vide)
+'Feuille 'Donnï¿½es prï¿½ts' (BPSH)
+Public Const IPBO As Integer = 1    'Numï¿½ro d'opï¿½ration
 Public Const IPBP As Integer = 2    'Poste
 Public Const IPBC As Integer = 3    'Contrepartie
 Public Const IPBD As Integer = 4    'Date de valeur
@@ -47,84 +51,84 @@ Public Const IPBR As Integer = 5    'Date de remboursement
 Public Const IPBN As Integer = 6    'Nominal
 Public Const IPBV As Integer = 12    'Montant remboursement
 'public ipbl as Integer      'PNL
-'Public ipbc As Integer      'Numéro de compte
+'Public ipbc As Integer      'Numï¿½ro de compte
 'Public ipbd As Integer      'Date comptable
 'Public ipbv As Integer      'Valeur comptable
-'Feuille 'Echéancier' (ESH)
-Public Const IEN As Integer = 1     'Colonne numéro d'opération
+'Feuille 'Echï¿½ancier' (ESH)
+Public Const IEN As Integer = 1     'Colonne numï¿½ro d'opï¿½ration
 Public Const IED As Integer = 2     'Colone date
-Public Const IET As Integer = 3     'Colone tombée
+Public Const IET As Integer = 3     'Colone tombï¿½e
 'Feuille 'soldes' (SSH)
-Public Const ISL As Integer = 6         'Ligne de départ du tableau des soldes
+Public Const ISL As Integer = 6         'Ligne de dï¿½part du tableau des soldes
 Public Const ISLAT As Integer = ISL + 1 'Ligne du solde actions transactions
 Public Const ISLAP As Integer = ISL + 2 'Ligne du solde actions placement
 Public Const ISLAI As Integer = ISL + 3 'Ligne du solde actions participation
 Public Const ISLOP As Integer = ISL + 4 'Ligne du solde obligations placement
 Public Const ISLOI As Integer = ISL + 5 'Ligne du solde obligations investissement
-Public Const ISLP As Integer = ISL + 6  'Ligne du solde prêts
-Public Const ISC As Integer = 5         'Colonne de départ du tableau des soldes
-Public Const ISAL As Integer = 16    'Ligne de départ du tableau des soldes actions
-'Public Const isac As Integer = 5    'Colonne de départ du tableau des soldes actions
-Public isac As Integer    'Colonne de départ du tableau des soldes actions
+Public Const ISLP As Integer = ISL + 6  'Ligne du solde prï¿½ts
+Public Const ISC As Integer = 5         'Colonne de dï¿½part du tableau des soldes
+Public Const ISAL As Integer = 16    'Ligne de dï¿½part du tableau des soldes actions
+'Public Const isac As Integer = 5    'Colonne de dï¿½part du tableau des soldes actions
+Public isac As Integer    'Colonne de dï¿½part du tableau des soldes actions
 Public Const ISACN As Integer = 2   'Colonne nom
 Public Const ISACC As Integer = 3   'Colonne code
 Public Const ISACP As Integer = 4   'Colonne portefeuille
 'Feuille 'encours'
-Public Const IEL As Integer = 5     'Ligne de début du premier tableau
-Public Const IEC As Integer = 2     'Colonne de début du premier tableau
+Public Const IEL As Integer = 5     'Ligne de dï¿½but du premier tableau
+Public Const IEC As Integer = 2     'Colonne de dï¿½but du premier tableau
 Public Const IECE As Integer = 8    'Espace entre les deux tableaux
 Public Const IECM As Integer = IEC + 1    'Colonne mouvement du premier tableau
 Public Const IECA As Integer = IEC + 2  'Colonne acquisition du premier tableau
 Public Const IECC As Integer = IEC + 3  'Colonne cession du premier tableau
 Public Const IECS As Integer = IEC + 4  'Colonne solde du premier tableau
-Public Const IECD As Integer = IEC + 5  'Colonne durèe du premier tableau
-Public Const IECP As Integer = IEC + 6  'Colonne des pondérations (solde * durée) du premier tableau
-Public Const IEC2 As Integer = IEC + IECE  'Colonne de début de la 2ème série de tableaux
-Public Const IEC2M As Integer = IEC2 + 1  'Colonne mouvement du 2ème tableau
-Public Const IEC2A As Integer = IEC2 + 2 'Colonne acquisition du 2ème tableau
-Public Const IEC2C As Integer = IEC2 + 3 'Colonne cession du 2ème tableau
-Public Const IEC2S As Integer = IEC2 + 4 'Colonne solde du 2ème tableau
-Public Const IEC2D As Integer = IEC2 + 5 'Colonne durèe du 2ème tableau
-Public Const IEC2P As Integer = IEC2 + 6 'Colonne des pondérations (solde * durée) du 2ème tableau
-'Feuille 'Récap' (RSH)
-Public Const IRC As Integer = 3         'Colonne de début des soldes comptables
-Public Const IRPDD As String = "H3"     'Case date de début (prêts)
-Public Const IRPDF As String = "H4"     'Case date de fin (prêts)
+Public Const IECD As Integer = IEC + 5  'Colonne durï¿½e du premier tableau
+Public Const IECP As Integer = IEC + 6  'Colonne des pondï¿½rations (solde * durï¿½e) du premier tableau
+Public Const IEC2 As Integer = IEC + IECE  'Colonne de dï¿½but de la 2ï¿½me sï¿½rie de tableaux
+Public Const IEC2M As Integer = IEC2 + 1  'Colonne mouvement du 2ï¿½me tableau
+Public Const IEC2A As Integer = IEC2 + 2 'Colonne acquisition du 2ï¿½me tableau
+Public Const IEC2C As Integer = IEC2 + 3 'Colonne cession du 2ï¿½me tableau
+Public Const IEC2S As Integer = IEC2 + 4 'Colonne solde du 2ï¿½me tableau
+Public Const IEC2D As Integer = IEC2 + 5 'Colonne durï¿½e du 2ï¿½me tableau
+Public Const IEC2P As Integer = IEC2 + 6 'Colonne des pondï¿½rations (solde * durï¿½e) du 2ï¿½me tableau
+'Feuille 'Rï¿½cap' (RSH)
+Public Const IRC As Integer = 3         'Colonne de dï¿½but des soldes comptables
+Public Const IRPDD As String = "H3"     'Case date de dï¿½but (prï¿½ts)
+Public Const IRPDF As String = "H4"     'Case date de fin (prï¿½ts)
 Public Const IRATE As Integer = 9       'Ligne des encours actions transactions
 Public Const IRAPE As Integer = 10      'Ligne des encours actions placement
 Public Const IRAIE As Integer = 11      'Ligne des encours actions participation
 Public Const IROPE As Integer = 12      'Ligne des encours taux placement
 Public Const IROIE As Integer = 13      'Ligne des encours taux investissement
-Public Const IRPE As Integer = 14       'Ligne des encours prêts
+Public Const IRPE As Integer = 14       'Ligne des encours prï¿½ts
 Public Const IRAT As Integer = 18       'Ligne du solde actions transactions
 Public Const IRAP As Integer = 19       'Ligne du solde actions placement
 Public Const IRAI As Integer = 20       'Ligne du solde actions participation
 Public Const IROP As Integer = 21       'Ligne du solde taux placement
 Public Const IROI As Integer = 22       'Ligne du solde taux investissement
-Public Const IRP As Integer = 23        'Ligne du solde prêts
-Public Const IRRE As String = "D9:O13"      'Espace à réinitialiser (encours moyens)
-Public Const IRRS As String = "D18:O22"     'Espace à réinitialiser (soldes comptables)
-Public Const IRREP As String = "D14:O14"    'Espace à réinitialiser (encours moyens prêts)
-Public Const IRRSP As String = "D23:O23"    'Espace à réinitialiser (soldes comptables prêts)
+Public Const IRP As Integer = 23        'Ligne du solde prï¿½ts
+Public Const IRRE As String = "D9:O13"      'Espace ï¿½ rï¿½initialiser (encours moyens)
+Public Const IRRS As String = "D18:O22"     'Espace ï¿½ rï¿½initialiser (soldes comptables)
+Public Const IRREP As String = "D14:O14"    'Espace ï¿½ rï¿½initialiser (encours moyens prï¿½ts)
+Public Const IRRSP As String = "D23:O23"    'Espace ï¿½ rï¿½initialiser (soldes comptables prï¿½ts)
 
 Sub variables()
 
-Set RSH = ThisWorkbook.Worksheets("Récap")
+Set RSH = ThisWorkbook.Worksheets("Rï¿½cap")
 Set TASH = ThisWorkbook.Worksheets("Tableaux Analytiques Titres")
-Set TPSH = ThisWorkbook.Worksheets("Tableau Analytique Prêts")
+Set TPSH = ThisWorkbook.Worksheets("Tableau Analytique Prï¿½ts")
 Set ASH = ThisWorkbook.Worksheets("EM Actions")
 Set TSH = ThisWorkbook.Worksheets("EM Oblig")
 Set YSH = ThisWorkbook.Worksheets("EM Trans")
-Set PSH = ThisWorkbook.Worksheets("EM Prêts")
-Set SSH = ThisWorkbook.Worksheets("Soldes Début")
-Set BSH = ThisWorkbook.Worksheets("Données Titres")
-Set BPSH = ThisWorkbook.Worksheets("Données Prêts")
-Set ESH = ThisWorkbook.Worksheets("Echéancier Prêts")
+Set PSH = ThisWorkbook.Worksheets("EM Prï¿½ts")
+Set SSH = ThisWorkbook.Worksheets("Soldes Dï¿½but")
+Set BSH = ThisWorkbook.Worksheets("Donnï¿½es Titres")
+Set BPSH = ThisWorkbook.Worksheets("Donnï¿½es Prï¿½ts")
+Set ESH = ThisWorkbook.Worksheets("Echï¿½ancier Prï¿½ts")
 'Set xsh = ThisWorkbook.Worksheets("test")
 
 'Emplacements dans la feuille 'Soldes' partie soldes par titre
 'Utiliser avec ssh.Cells(isal, isac)
-isac = 5        'Colonne de départ
+isac = 5        'Colonne de dï¿½part
 
 End Sub
 
@@ -132,13 +136,13 @@ Sub commencer()
 
 'TESTDateDebut = Now
 
-optimisationDébut
+optimisationDï¿½but
 variables
-réinitialiser
+rï¿½initialiser
 
 'Encours titres
-encours_titres                  'Encours par opération/mois
-'encours_titres_2                'Encours par opération/mois (array) (plus rapide)
+encours_titres                  'Encours par opï¿½ration/mois
+'encours_titres_2                'Encours par opï¿½ration/mois (array) (plus rapide)
 init_tableaux_analytiques
 
 
@@ -151,11 +155,11 @@ Sub commencer_prets()
 
 'TESTDateDebut = Now
 
-optimisationDébut
+optimisationDï¿½but
 variables
-réinitialiser_prets
+rï¿½initialiser_prets
 
-'Encours prêts
+'Encours prï¿½ts
 encours_prets_2
 init_tableau_analytique_prets
 
@@ -167,15 +171,15 @@ End Sub
 
 Sub encours_titres()
 
-'Filtre et ordonne la base de données par date comptable du plus ancien au plus récent
+'Filtre et ordonne la base de donnï¿½es par date comptable du plus ancien au plus rï¿½cent
 trier_par_dates BSH, "K"
 
-'Détermine l'année de base
+'Dï¿½termine l'annï¿½e de base
 Dim y As Integer
 y = Year(BSH.Cells(2, IBD))
 di = Year(BSH.Cells(2, IBD))
 
-'Crée le contenant des calculs
+'Crï¿½e le contenant des calculs
 Set s = New Collection
 s.Add New Collection, "Action"
 s.Add New Collection, "Tx"
@@ -191,7 +195,7 @@ For Each i In s
     For Each j In i
         j.Add CDate("01/01/" & y), "date"       'Date
         j.Add 0, "Mvt"          'Mouvement
-        j.Add 0, "Pond."        'Solde * Durée
+        j.Add 0, "Pond."        'Solde * Durï¿½e
     Next j
 Next i
 
@@ -201,7 +205,7 @@ c.Add New Collection, "TRANS"
 c.Add New Collection, "PART"
 c.Add New Collection, "PLACT"
 
-'Cherche le solde de départ correspondant à l'année de base dans le tableau des soldes
+'Cherche le solde de dï¿½part correspondant ï¿½ l'annï¿½e de base dans le tableau des soldes
 With SSH
 i = ISC
 Do Until IsEmpty(.Cells(ISL, i))
@@ -216,9 +220,9 @@ Do Until IsEmpty(.Cells(ISL, i))
 Loop
 End With
 
-'Cherche les soldes de départ des tableaux analytiques
+'Cherche les soldes de dï¿½part des tableaux analytiques
 With SSH
-'Cherche la colonne correspondante à l'année de base dans le tableau des soldes actions
+'Cherche la colonne correspondante ï¿½ l'annï¿½e de base dans le tableau des soldes actions
 i = isac
 Do Until IsEmpty(.Cells(ISAL, i))
     If y - 1 = .Cells(ISAL, i) Then isac = i
@@ -237,7 +241,7 @@ Do Until IsEmpty(.Cells(i, ISACN))
             c.Item(.Cells(i, ISACP)).Item(.Cells(i, ISACC)).Add 0, "acquisition"
             c.Item(.Cells(i, ISACP)).Item(.Cells(i, ISACC)).Add 0, "augmentation capital"
             c.Item(.Cells(i, ISACP)).Item(.Cells(i, ISACC)).Add 0, "reclassement"
-            c.Item(.Cells(i, ISACP)).Item(.Cells(i, ISACC)).Add 0, "réduction capital"
+            c.Item(.Cells(i, ISACP)).Item(.Cells(i, ISACC)).Add 0, "rï¿½duction capital"
             c.Item(.Cells(i, ISACP)).Item(.Cells(i, ISACC)).Add 0, "cession"
         End If
     Next j
@@ -253,7 +257,7 @@ jap = 0     'Compteur de lignes pour encours actions placement
 jai = 0     'Compteur de lignes pour encours actions participation
 jtp = 0     'Compteur de lignes pour encours taux placement
 jti = 0     'Compteur de lignes pour encours taux investissement
-dd = .Cells(i, IBD)      'Date de la dernière opération
+dd = .Cells(i, IBD)      'Date de la derniï¿½re opï¿½ration
 affiche_titres_encours_op YSH, IEC, "TRANS"
 affiche_titres_encours_op ASH, IEC2, "PLACT"
 affiche_titres_encours_op ASH, IEC, "PART"
@@ -269,7 +273,7 @@ Do Until IsEmpty(.Cells(i, IBD))
         calcul_mensuel "Tx", "INVEST", IROI, IROIE, i
     End If
     
-    'Détermine la date de la dernière opération
+    'Dï¿½termine la date de la derniï¿½re opï¿½ration
     If CDate(.Cells(i, IBD)) > CDate(dd) Then
         dd = .Cells(i, IBD)
     End If
@@ -283,7 +287,7 @@ Do Until IsEmpty(.Cells(i, IBD))
                 jat = jat + 1
             End If
             calculs "Action", "TRANS", YSH, i, jat - 1, IEC, IECS, IECD, IECP, IECM, IECA, IECC, IRAT, IRATE
-            If IsEmpty(.Cells(i, IBO)) Then calculs_tableaux_analytiques "TRANS", i     'Pour éviter de prendre en compte les écritures (ext ATPD et équivalent)
+            If IsEmpty(.Cells(i, IBO)) Then calculs_tableaux_analytiques "TRANS", i     'Pour ï¿½viter de prendre en compte les ï¿½critures (ext ATPD et ï¿½quivalent)
         End If
     'End If
     Next j
@@ -356,10 +360,10 @@ Sub affiche_titres_encours_op(sh As Worksheet, col As Integer, portefeuille As S
 
 With sh
     
-    'titres = "Date,Mvt,Acquisition,Cession,Solde,Durée,Solde * durée"
-    'If portefeuille = "PRETS" Then titres = "Date,Mvt,Octroi,Remboursement,Solde,Durée,Solde * durée"
-    titres = Array("Date", "Mvt", "Acquisition", "Cession", "Solde", "Durée", "Solde * durée")
-    If portefeuille = "PRETS" Then titres = Array("Date", "Mvt", "Octroi", "Remboursement", "Solde", "Durée", "Solde * durée")
+    'titres = "Date,Mvt,Acquisition,Cession,Solde,Durï¿½e,Solde * durï¿½e"
+    'If portefeuille = "PRETS" Then titres = "Date,Mvt,Octroi,Remboursement,Solde,Durï¿½e,Solde * durï¿½e"
+    titres = Array("Date", "Mvt", "Acquisition", "Cession", "Solde", "Durï¿½e", "Solde * durï¿½e")
+    If portefeuille = "PRETS" Then titres = Array("Date", "Mvt", "Octroi", "Remboursement", "Solde", "Durï¿½e", "Solde * durï¿½e")
     
     'Grand titre
     lignetitre = IEL - 2
@@ -379,7 +383,7 @@ Function calcul_mensuel(item1, item2, rl, rle, i)
     RSH.Cells(rl, IRC + Month(dd)) = s.Item(item1).Item(item2).Item("solde")
     'Encours mensuel
     d = s.Item(item1).Item(item2).Item("date")
-    dn = DateSerial(Year(dd), Month(dd) + 1, 0) - CDate(d) + 1      'dernière opération du mois -> fin de mois + 1
+    dn = DateSerial(Year(dd), Month(dd) + 1, 0) - CDate(d) + 1      'derniï¿½re opï¿½ration du mois -> fin de mois + 1
     j = s.Item(item1).Item(item2).Item("Pond.") + s.Item(item1).Item(item2).Item("solde") * dn
     RSH.Cells(rle, IRC + Month(dd)) = j / _
     (DateSerial(Year(dd), Month(dd) + 1, 0) - _
@@ -411,7 +415,7 @@ With sh
         End If
         s.Item(item1).Item(item2).Remove "Mvt"
         s.Item(item1).Item(item2).Add BSH.Cells(i, IBV), "Mvt"
-        'Somme: Solde * Durée
+        'Somme: Solde * Durï¿½e
         j = s.Item(item1).Item(item2).Item("Pond.") + du * s.Item(item1).Item(item2).Item("solde")
         s.Item(item1).Item(item2).Remove "Pond."
         s.Item(item1).Item(item2).Add j, "Pond."
@@ -454,7 +458,7 @@ With sh
         End If
         s.Item(item1).Item(item2).Remove "Mvt"
         s.Item(item1).Item(item2).Add arr(i, IBV), "Mvt"
-        'Somme: Solde * Durée
+        'Somme: Solde * Durï¿½e
         j = s.Item(item1).Item(item2).Item("Pond.") + du * s.Item(item1).Item(item2).Item("solde")
         s.Item(item1).Item(item2).Remove "Pond."
         s.Item(item1).Item(item2).Add j, "Pond."
@@ -502,15 +506,15 @@ For Each x In c.Item(portefeuille)
             c.Item(portefeuille).Item(.Cells(i, IBCC)).Remove "reclassement"
             c.Item(portefeuille).Item(.Cells(i, IBCC)).Add j - .Cells(i, IBV), "reclassement"
         End If
-'        If .Cells(i, ibp) = "AUGCAPITAL" Then   'A vérifier
+'        If .Cells(i, ibp) = "AUGCAPITAL" Then   'A vï¿½rifier
 '            j = c.Item(portefeuille).Item(.Cells(i, ibcc)).Item("augmentation capital")
 '            c.Item(portefeuille).Item(.Cells(i, ibcc)).Remove "augmentation capital"
 '            c.Item(portefeuille).Item(.Cells(i, ibcc)).Add j - .Cells(i, ibv), "augmentation capital"
 '        End If
         If .Cells(i, IBP) = "REDCAPITAL" Then
-            j = c.Item(portefeuille).Item(.Cells(i, IBCC)).Item("réduction capital")
-            c.Item(portefeuille).Item(.Cells(i, IBCC)).Remove "réduction capital"
-            c.Item(portefeuille).Item(.Cells(i, IBCC)).Add j - .Cells(i, IBV), "réduction capital"
+            j = c.Item(portefeuille).Item(.Cells(i, IBCC)).Item("rï¿½duction capital")
+            c.Item(portefeuille).Item(.Cells(i, IBCC)).Remove "rï¿½duction capital"
+            c.Item(portefeuille).Item(.Cells(i, IBCC)).Add j - .Cells(i, IBV), "rï¿½duction capital"
         End If
         ''''''''''''''''''''''''''''
     End If
@@ -539,9 +543,9 @@ If dansC = 0 Then
         c.Item(portefeuille).Item(.Cells(i, IBCC)).Add 0, "reclassement"
     End If
     If .Cells(i, IBP) = "REDCAPITAL" Then
-        c.Item(portefeuille).Item(.Cells(i, IBCC)).Add -.Cells(i, IBV), "réduction capital"
+        c.Item(portefeuille).Item(.Cells(i, IBCC)).Add -.Cells(i, IBV), "rï¿½duction capital"
     Else
-        c.Item(portefeuille).Item(.Cells(i, IBCC)).Add 0, "réduction capital"
+        c.Item(portefeuille).Item(.Cells(i, IBCC)).Add 0, "rï¿½duction capital"
     End If
     c.Item(portefeuille).Item(.Cells(i, IBCC)).Add 0, "augmentation capital"
 End If
@@ -600,9 +604,9 @@ End If
 End Function
 
 Function correction_fin(item1, item2, sh, ligne, c, cs, cd, cp, cm, ca, cc, rl, rle)
-'c: Colonne date            'cs: Colonne solde              'cd: Colonne durée
-'cp: Colonne pondération    'cm: Colonne mouvement          'ca: Colonne acquisition
-'cc: Colonne cession        'rl: Récap ligne solde          'rle: Récap ligne encours
+'c: Colonne date            'cs: Colonne solde              'cd: Colonne durï¿½e
+'cp: Colonne pondï¿½ration    'cm: Colonne mouvement          'ca: Colonne acquisition
+'cc: Colonne cession        'rl: Rï¿½cap ligne solde          'rle: Rï¿½cap ligne encours
 
 'Recap: Dernier mois
 d = s.Item(item1).Item(item2).Item("date")
@@ -610,7 +614,7 @@ RSH.Cells(rl, IRC + Month(d)) = s.Item(item1).Item(item2).Item("solde")
 
 With sh
     ligne2 = IEL + ligne
-    'Durèe et solde * durèe (tableau des encours): dernière opération
+    'Durï¿½e et solde * durï¿½e (tableau des encours): derniï¿½re opï¿½ration
     du = DateSerial(Year(dd), Month(dd) + 1, 0) - CDate(d) + 1
     .Cells(ligne2, cd) = du
     .Cells(ligne2, cp) = du * s.Item(item1).Item(item2).Item("solde")
@@ -625,13 +629,13 @@ With sh
         .Cells(ligne2, ca).NumberFormat = "#,##0.00"
     End If
 
-    'Encours Dernière opération
+    'Encours Derniï¿½re opï¿½ration
     .Cells(ligne2, c) = s.Item(item1).Item(item2).Item("date")
     .Cells(ligne2, cs) = s.Item(item1).Item(item2).Item("solde")
     .Cells(ligne2, cs).NumberFormat = "#,##0.00"
 End With
 
-    'Somme: Solde * Durée
+    'Somme: Solde * Durï¿½e
     j = s.Item(item1).Item(item2).Item("Pond.") + du * s.Item(item1).Item(item2).Item("solde")
     s.Item(item1).Item(item2).Remove "Pond."
     s.Item(item1).Item(item2).Add j, "Pond."
@@ -651,7 +655,7 @@ RSH.Cells(IRP, IRC + Month(d)) = s.Item("solde")
 
 With sh
     ligne2 = IEL + ligne
-    'Durèe et solde * durèe (tableau des encours): dernière opération
+    'Durï¿½e et solde * durï¿½e (tableau des encours): derniï¿½re opï¿½ration
     du = DateSerial(Year(dd), Month(dd) + 1, 0) - CDate(d) + 1
     .Cells(ligne2, 7) = du
     .Cells(ligne2, 8) = du * s.Item("solde")
@@ -666,13 +670,13 @@ With sh
         .Cells(ligne2, 5).NumberFormat = "#,##0.00"
     End If
 
-    'Encours Dernière opération
+    'Encours Derniï¿½re opï¿½ration
     .Cells(ligne2, 2) = s.Item("date")
     .Cells(ligne2, 6) = s.Item("solde")
     .Cells(ligne2, 6).NumberFormat = "#,##0.00"
 End With
 
-'Somme: Solde * Durée
+'Somme: Solde * Durï¿½e
 j = s.Item("Pond.") + du * s.Item("solde")
 s.Remove "Pond."
 s.Add j, "Pond."
@@ -707,17 +711,17 @@ Sub trier_par_dates(sh, col)
 End Sub
 
 
-Sub réinitialiser()
+Sub rï¿½initialiser()
 
 'variables
 
-'Réinitialiser la feuille 'Récap' (champs titres)
+'Rï¿½initialiser la feuille 'Rï¿½cap' (champs titres)
 'RSH.Range("E9:P13").ClearContents
 'RSH.Range("E18:P22").ClearContents
 RSH.Range(IRRE).ClearContents
 RSH.Range(IRRS).ClearContents
 
-'Réinitialiser les feuille 'EM Actions', 'EM Trans' et 'EM Tx'
+'Rï¿½initialiser les feuille 'EM Actions', 'EM Trans' et 'EM Tx'
 ASH.Cells.ClearContents
 YSH.Cells.ClearContents
 TSH.Cells.ClearContents
@@ -725,34 +729,34 @@ ASH.Cells.ClearFormats
 YSH.Cells.ClearFormats
 TSH.Cells.ClearFormats
 
-'Réinitialiser la feuille 'Tableaux analytiques'
+'Rï¿½initialiser la feuille 'Tableaux analytiques'
 TASH.Cells.ClearContents
 TASH.Cells.ClearFormats
 TASH.Cells.Interior.Color = xlNone
 
 End Sub
-Sub réinitialiser_prets()
+Sub rï¿½initialiser_prets()
 
 'variables
 
-'Réinitialiser la feuille 'Récap' (champs prêts)
+'Rï¿½initialiser la feuille 'Rï¿½cap' (champs prï¿½ts)
 'RSH.Range("E14:P14").ClearContents
 'RSH.Range("E23:P23").ClearContents
 RSH.Range(IRREP).ClearContents
 RSH.Range(IRRSP).ClearContents
 
-'Réinitialiser les feuille 'EM Prêts'
+'Rï¿½initialiser les feuille 'EM Prï¿½ts'
 PSH.Cells.ClearContents
 PSH.Cells.ClearFormats
 PSH.Cells.Interior.Color = xlNone
 
-'Réinitialiser la feuille 'Tableau Analytique Prêts'
+'Rï¿½initialiser la feuille 'Tableau Analytique Prï¿½ts'
 TPSH.Cells.ClearContents
 TPSH.Cells.ClearFormats
 TPSH.Cells.Interior.Color = xlNone
 
 End Sub
-Sub optimisationDébut()
+Sub optimisationDï¿½but()
 
 Application.DisplayStatusBar = False
 Application.EnableEvents = False
@@ -780,12 +784,12 @@ Dim arr() As Variant
 Dim titres() As Variant
 
 Const itat As Integer = 2   'Colonne titre
-Const itad As Integer = 3   'Colonne solde début
+Const itad As Integer = 3   'Colonne solde dï¿½but
 Const itaa As Integer = 4   'Colonne acquisition
 
 Dim itaak As Integer       'Colonne augmentation capital
 Dim itar As Integer        'Colonne reclassement
-Dim itark As Integer       'Colonne réduction capital
+Dim itark As Integer       'Colonne rï¿½duction capital
 Dim itac As Integer        'Colonne cession
 Dim itasf As Integer       'Colonne solde fin
 
@@ -795,8 +799,8 @@ With TASH
 x = IEL - 2
 For Each i In Split("TRANS PART PLACT")
 
-    'titres = "Titre,Début,Acquisition,Reclassement,Cession,Fin"
-    titres = Array("Titre", "Solde Début", "Acquisition", "Reclassement", "Cession", "Solde Fin")
+    'titres = "Titre,Dï¿½but,Acquisition,Reclassement,Cession,Fin"
+    titres = Array("Titre", "Solde Dï¿½but", "Acquisition", "Reclassement", "Cession", "Solde Fin")
     'index tableaux analytiques
     'itaa = 4        'Colonne acquisition
     itar = 5        'Colonne reclassement
@@ -804,11 +808,11 @@ For Each i In Split("TRANS PART PLACT")
     itasf = 7       'Colonne solde fin
     
     If i = "PART" Then
-        'titres = "Titre,Début,Acquisition,Aug. Capital,Reclassement,Red. Capital,Cession,Fin"
-        titres = Array("Titre", "Solde Début", "Acquisition", "Aug. Capital", "Reclassement", "Red. Capital", "Cession", "Solde Fin")
+        'titres = "Titre,Dï¿½but,Acquisition,Aug. Capital,Reclassement,Red. Capital,Cession,Fin"
+        titres = Array("Titre", "Solde Dï¿½but", "Acquisition", "Aug. Capital", "Reclassement", "Red. Capital", "Cession", "Solde Fin")
         itaak = 5       'Colonne augmentation capital
         itar = 6        'Colonne reclassement
-        itark = 7       'Colonne réduction capital
+        itark = 7       'Colonne rï¿½duction capital
         itac = 8        'Colonne cession
         itasf = 9       'Colonne solde fin
     End If
@@ -845,7 +849,7 @@ For Each i In Split("TRANS PART PLACT")
         .Cells(x, itac) = j.Item("cession")
         If i = "PART" Then
             .Cells(x, itaak) = j.Item("augmentation capital")
-            .Cells(x, itark) = j.Item("réduction capital")
+            .Cells(x, itark) = j.Item("rï¿½duction capital")
             .Cells(x, itaak).NumberFormat = "#,##0.00"
             .Cells(x, itark).NumberFormat = "#,##0.00"
         End If
@@ -881,16 +885,16 @@ End Sub
 Sub init_tableau_analytique_prets()
 
 Const itate As Integer = 2    'Colonne titre emprunteur
-Const itasd As Integer = 3    'Colonne solde début
+Const itasd As Integer = 3    'Colonne solde dï¿½but
 Const itacc As Integer = 4    'Colonne conversion en capital
-Const itanp As Integer = 5    'Colonne nouveaux prêts
+Const itanp As Integer = 5    'Colonne nouveaux prï¿½ts
 Const itare As Integer = 6    'Colonne remboursements
 Const itara As Integer = 7    'Colonne rachats
 Const itasf As Integer = 8    'Colonne solde fin
 
 With TPSH
     x = IEL - 2
-    titres = Array("Emprunteur", "Solde Début", "Conversion en Capital", "Nouveaux Prêts", "Remboursements", "Rachat", "Solde Fin")
+    titres = Array("Emprunteur", "Solde Dï¿½but", "Conversion en Capital", "Nouveaux Prï¿½ts", "Remboursements", "Rachat", "Solde Fin")
     .Cells(x, itate) = "PRETS"        'Nom du portefeuille (titre)
     .Range(.Cells(x + 1, itate), .Cells(x + 1, UBound(titres) + itate)) = titres
     
@@ -939,28 +943,28 @@ Sub encours_prets_2()
 
 trier_par_dates BPSH, "E"
 
-'Dates début et fin
+'Dates dï¿½but et fin
 dd = CDate(RSH.Range(IRPDD).Value)
 df = CDate(RSH.Range(IRPDF).Value)
 
-'Détermine l'année de base (peut générer des bugs)
+'Dï¿½termine l'annï¿½e de base (peut gï¿½nï¿½rer des bugs)
 Dim y As Integer
-'y = Year(bpsh.Cells(2, ipbr)) 'Peut générer un bug s'il n'y a que des prêts linéaires avec des dates différentes de l'anée actuelle)
+'y = Year(bpsh.Cells(2, ipbr)) 'Peut gï¿½nï¿½rer un bug s'il n'y a que des prï¿½ts linï¿½aires avec des dates diffï¿½rentes de l'anï¿½e actuelle)
 y = Year(dd)
 
-'Collection d'opérations
+'Collection d'opï¿½rations
 Set o = New Collection
 
 'Collection tableau analytique
 Set c = New Collection
 
-'Crée le contenant des calculs
+'Crï¿½e le contenant des calculs
 Set s = New Collection
 s.Add CDate("01/01/" & y), "date"       'Date
 s.Add 0, "Mvt"          'Mouvement
-s.Add 0, "Pond."        'Solde * Durée
+s.Add 0, "Pond."        'Solde * Durï¿½e
 
-'Solde de départ
+'Solde de dï¿½part
 With SSH
 i = ISC
 Do Until IsEmpty(.Cells(ISL, i))
@@ -969,15 +973,15 @@ Do Until IsEmpty(.Cells(ISL, i))
 Loop
 End With
 
-'Cherche les soldes de départ du tableau analytique
+'Cherche les soldes de dï¿½part du tableau analytique
 With SSH
-'Cherche la colonne correspondante à l'année de base dans le tableau des soldes
+'Cherche la colonne correspondante ï¿½ l'annï¿½e de base dans le tableau des soldes
 i = isac
 Do Until IsEmpty(.Cells(ISAL, i))
     If y - 1 = .Cells(ISAL, i) Then isac = i
     i = i + 1
 Loop
-'Compile la liste des prêts
+'Compile la liste des prï¿½ts
 i = ISAL + 1
 Do Until IsEmpty(.Cells(i, ISACN))
     If .Cells(i, ISACP) = "PRETS" Then
@@ -995,7 +999,7 @@ Do Until IsEmpty(.Cells(i, ISACN))
 Loop
 End With
 
-'Extraction des numéros d'opération des remboursements linéaires
+'Extraction des numï¿½ros d'opï¿½ration des remboursements linï¿½aires
 With ESH
 Dim arr As Variant
 i = 2
@@ -1007,7 +1011,7 @@ Do Until IsEmpty(.Cells(i, IEN))
 Loop
 End With
 
-'Boucle sur la base de données
+'Boucle sur la base de donnï¿½es
 With BPSH
 i = 2
 x = 0
@@ -1015,7 +1019,7 @@ Do Until IsEmpty(.Cells(i, 3))
     'Ignorer EMLT
     If .Cells(i, IPBP) <> "EMLT" Then
         If CDate(.Cells(i, IPBD)) >= dd And CDate(.Cells(i, IPBD)) <= df Then
-            'Augmentation stock de prêts
+            'Augmentation stock de prï¿½ts
             xx = str(x)
             o.Add New Collection, xx
             o.Item(xx).Add .Cells(i, IPBC), "code"
@@ -1028,7 +1032,7 @@ Do Until IsEmpty(.Cells(i, 3))
             If CDbl(.Cells(i, IPBO)) = CDbl(j) Then lin = 1
         Next j
         If lin = 1 Then
-        'Remboursement linéaire (traitement à part)
+        'Remboursement linï¿½aire (traitement ï¿½ part)
             k = 2
             Do Until IsEmpty(ESH.Cells(k, IEN))
                 'If .Cells(i, ipbo) = esh.Cells(k, ien) And dd <= CDate(esh.Cells(k, ied)) <= df Then
@@ -1059,7 +1063,7 @@ Do Until IsEmpty(.Cells(i, 3))
 Loop
 End With
 
-'Tri des opérations par dates
+'Tri des opï¿½rations par dates
 'Insertion sort
 'x = 0
 For x = 1 To o.Count - 1
@@ -1076,10 +1080,10 @@ For x = 1 To o.Count - 1
     Loop
 Next x
 
-'''' Début du calcul des encours moyens ''''''''''''
+'''' Dï¿½but du calcul des encours moyens ''''''''''''
 'affiche_titres_encours_op_prets psh, iec, "PRETS"
 affiche_titres_encours_op PSH, IEC, "PRETS"
-dd = o.Item(str(0)).Item("date")      'Date de la dernière opération
+dd = o.Item(str(0)).Item("date")      'Date de la derniï¿½re opï¿½ration
 k = 0
 For i = 0 To o.Count - 1
 
@@ -1088,12 +1092,12 @@ For i = 0 To o.Count - 1
         calcul_mensuel_prets IRP, IRPE, y
     End If
     
-    'Détermine la date de la dernière opération
+    'Dï¿½termine la date de la derniï¿½re opï¿½ration
     If CDate(o.Item(str(i)).Item("date")) > CDate(dd) Then
         dd = o.Item(str(i)).Item("date")
     End If
     
-    '''' <- Calcul par opération
+    '''' <- Calcul par opï¿½ration
     d = s.Item("date")
     If CDate(d) <> CDate(dd) Then
         k = k + 1
@@ -1193,7 +1197,7 @@ With sh
         End If
         s.Remove "Mvt"
         s.Add valeur, "Mvt"
-        'Somme: Solde * Durée
+        'Somme: Solde * Durï¿½e
         j = s.Item("Pond.") + du * s.Item("solde")
         s.Remove "Pond."
         s.Add j, "Pond."
@@ -1217,7 +1221,7 @@ Function calcul_mensuel_prets(rl, rle, y)
     RSH.Cells(rl, IRC + Month(dd)) = s.Item("solde")
     'Encours mensuel
     d = s.Item("date")
-    dn = DateSerial(Year(dd), Month(dd) + 1, 0) - CDate(d) + 1      'dernière opération du mois -> fin de mois + 1
+    dn = DateSerial(Year(dd), Month(dd) + 1, 0) - CDate(d) + 1      'derniï¿½re opï¿½ration du mois -> fin de mois + 1
     j = s.Item("Pond.") + s.Item("solde") * dn
     RSH.Cells(rle, IRC + Month(dd)) = j / _
     (DateSerial(Year(dd), Month(dd) + 1, 0) - _
